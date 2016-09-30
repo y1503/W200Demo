@@ -30,36 +30,10 @@
 
     //耳机插入和拔出的通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(checkHeadset) name:AVAudioSessionRouteChangeNotification object:nil];
-    
-//    NSArray *outputArray = [[AVAudioSession sharedInstance].outputDataSources ];
-    
-////    在耳机插入的状态下，将输入源调整为手机内置麦克风，而输出源仍然保持为耳机。
-//    NSArray* availableInputs = [[AVAudioSession sharedInstance] availableInputs];
-//    NSLog(@"available inputs:%@",availableInputs);
-//    
-////    可以看出，现在可用的输入源包括内置麦克风和耳机麦克风(Wired Microphone)。我们通过以下方法改变输入源：
-//    NSArray* inputArray = [[AVAudioSession sharedInstance] availableInputs];
-//    for (AVAudioSessionPortDescription* desc in inputArray) {
-//        if ([desc.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
-//            NSError* error;
-//            [[AVAudioSession sharedInstance] setPreferredInput:desc error:&error];
-//        }
-//    }
-//    同样，在需要切换回来时，检查desc.portType是不是AVAudioSessionPortHeadsetMic，如果是，调整回来。
-//    需要注意的是，使用这个方法会触发AVAudioSessionRouteChangeNotification通知，而插入耳机后，也会调用这个通知。我在测试的时候，为了检查耳机插入的动作，监听了这个通知，然后在通知回调方法里通过上面方法修改了输入源，导致又触发了通知，所以插入1次耳机导致了2次调用。
-    
-    
     [self initViews];
 
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
-    
-//    UInt32 sessionCategory = kAudioSessionCategory_MediaPlayback;
-//    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(sessionCategory), &sessionCategory);
-//    UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
-//    AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,sizeof (audioRouteOverride),&audioRouteOverride);
-    
-    
     
     __weak typeof(self)weakSelf = self;
     self.mRecorder = [[Recorder alloc] init];
