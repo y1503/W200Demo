@@ -193,7 +193,7 @@
             break;
         case 102://检测W200
         {
-//            [self checkHeadset];
+            [self checkHeadset];
         }
             break;
         case 103://检测电量
