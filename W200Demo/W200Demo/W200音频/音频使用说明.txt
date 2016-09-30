@@ -1,0 +1,14 @@
+
+扫描指令音频：rsine4khz
+
+扫描提示音音频：beep100ms
+目前只需要用上面两个音频文件。如果效果不佳再考虑下面的指令音频
+
+检测指令音频：极性正为detectdata
+	     极性反为 fandetectdata
+
+设备确认音频：极性正为responses
+	     极性反为fanresponses
+
+获取电量音频：极性正为getcharge
+	     极性反为fangetcharge
