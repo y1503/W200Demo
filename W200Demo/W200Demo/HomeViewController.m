@@ -41,7 +41,7 @@
     self.mRecorder = [[Recorder alloc] init];
     [self.mRecorder setCallHandle:^(NSString *codeStr) {
         weakSelf.date = [NSDate date];
-        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+//        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
         [weakSelf playWordSound:@"beep100ms.wav"];
         [[NSDate date] timeIntervalSinceDate:weakSelf.date];
         NSLog(@"结束：%f", [[NSDate date] timeIntervalSinceDate:weakSelf.date]);

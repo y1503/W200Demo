@@ -57,6 +57,8 @@ static void AQInputCallback (void * __nullable       inUserData,
         //        aqc.recPtr = 0;
         aqc.run = 1;
         
+        AudioQueueSetParameter (aqc.queue,kAudioQueueParam_Volume,1.0);//设置音量
+
         
         for (int i=0;i<kNumberBuffers;i++)
         {
