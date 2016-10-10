@@ -10,7 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "Recorder.h"
 
-@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate>
+@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
 @property (weak, nonatomic) IBOutlet UILabel *messageLbl;
 @property (weak, nonatomic) IBOutlet UIButton *clearBtn;
@@ -20,7 +20,8 @@
 @property (nonatomic, strong) Recorder *mRecorder;
 @property (nonatomic, strong) UIButton *scanBtn;//扫描按钮
 @property (nonatomic, strong) NSMutableArray *billArr;
-@property (nonatomic, strong) NSDate *date;
+@property (nonatomic, assign) int bageValue;//记录当前电量
+@property (nonatomic, strong) NSTimer *timer;//定时器
 
 @end
 
@@ -29,6 +30,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    self.bageValue = -1;
+    
     //耳机插入和拔出的通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(checkHeadset) name:AVAudioSessionRouteChangeNotification object:nil];
     [self initViews];
@@ -40,28 +43,35 @@
     __weak typeof(self)weakSelf = self;
     self.mRecorder = [[Recorder alloc] init];
     [self.mRecorder setCallHandle:^(NSString *codeStr) {
-        weakSelf.date = [NSDate date];
 //        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
         [weakSelf playWordSound:@"beep100ms.wav"];
-        [[NSDate date] timeIntervalSinceDate:weakSelf.date];
-        NSLog(@"结束：%f", [[NSDate date] timeIntervalSinceDate:weakSelf.date]);
         weakSelf.billCodeTF.text = codeStr;
         [weakSelf.billArr addObject:codeStr];
         [weakSelf.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
     }];
     
     [self.mRecorder setCallHandleForBat:^(int value) {
+        weakSelf.bageValue = value;
         [weakSelf.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
-         weakSelf.messageLbl.text = @"设备就绪";
+        
+        weakSelf.messageLbl.text = @"设备就绪";
         
     }];
-//
-//    
+    
+
+
 //    NSArray* input = [[AVAudioSession sharedInstance] currentRoute].inputs;
 //    NSArray* output = [[AVAudioSession sharedInstance] currentRoute].outputs;
 //    NSLog(@"current intput:%@",input);
 //    NSLog(@"current output:%@",output);
     
+}
+
+- (void)checkBageValue
+{
+    if (self.bageValue == -1) {
+        self.messageLbl.text = @"请重新匹配W200设备";
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -208,13 +218,7 @@
         //检测到设备插入检测一次
         [self play:@"rsine500hz.wav"];
         self.messageLbl.text = @"匹配W200设备...";
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if ([self.messageLbl.text isEqualToString:@"匹配W200设备..."]) {
-                self.messageLbl.text = @"请重新匹配W200设备";
-            }
-        });
-        
+        self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(checkBageValue) userInfo:nil repeats:NO];
         
     }else{
         NSLog(@"耳机拔出");
@@ -277,6 +281,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     NSError *err = nil;
     self.movePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&err];
     self.movePlayer.volume = 1.0;
+    self.movePlayer.delegate = self;
     [self.movePlayer prepareToPlay];
     if (err!=nil) {
         NSLog(@"move player init error:%@",err);
@@ -327,5 +332,9 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     
 }
 
+- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
+{
+    
+}
 
 @end
