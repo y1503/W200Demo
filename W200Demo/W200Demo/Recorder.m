@@ -29,41 +29,15 @@ static void AQInputCallback (void * __nullable       inUserData,
     
     if (engine.aqc.run)  
     {
-        AudioQueueEnqueueBuffer(engine.aqc.queue, inBuffer, 0, NULL);
+        AudioQueueEnqueueBuffer(engine.aqc.queue, inBuffer, 0, NULL);//把处理后的buf插入到缓存队列中
     }
     
 }
-//设置了播放和录音同时进行，注释掉的代码可以激活扬声器
--(void)initAudioSession  
-{  
-
-//    AudioSessionInitialize(NULL, NULL, NULL, (__bridge void *)(self));  
-//    
-//    UInt32 route;
-//    OSStatus error;   
-//    UInt32 sessionCategory = kAudioSessionCategory_PlayAndRecord;
-//    
-//    error = AudioSessionSetProperty (
-//                                     kAudioSessionProperty_AudioCategory,                       
-//                                     sizeof (sessionCategory),                                 
-//                                     &sessionCategory                                          
-//                                     );
-//    
-////    route = kAudioSessionOverrideAudioRoute_Speaker;
-////    error = AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(route), &route);
-//    AudioSessionSetActive(true);
-    
-//    AVAudioSession *session = [AVAudioSession sharedInstance];
-////    [session setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
-//    [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
-//    [session setActive:YES error:nil];
-    
-} 
+ 
 - (id)init
 {
     if (self = [super init])
     {
-        [self initAudioSession];
         
         memset(&aqc.mDataFormat, 0, sizeof(aqc.mDataFormat));
         
@@ -74,7 +48,7 @@ static void AQInputCallback (void * __nullable       inUserData,
         aqc.mDataFormat.mChannelsPerFrame = 1;//1:单声道；2:立体声
         aqc.mDataFormat.mBitsPerChannel = 16;//语音每采样点占用位数,语音每采样点占用位数,比特率 8 16 24 32
         aqc.mDataFormat.mBytesPerFrame = 2;
-        aqc.frameSize = kFrameSize;
+        aqc.frameSize = kFrameSize;//缓存队列中buf的大小
         aqc.mDataFormat.mBytesPerPacket = aqc.mDataFormat.mBytesPerFrame * aqc.mDataFormat.mFramesPerPacket;
         
         AudioQueueNewInput(&aqc.mDataFormat, AQInputCallback, (__bridge void * _Nullable)(self), NULL, kCFRunLoopCommonModes, 0, &aqc.queue);
@@ -83,8 +57,21 @@ static void AQInputCallback (void * __nullable       inUserData,
         //        aqc.recPtr = 0;
         aqc.run = 1;
         
-        int status = AudioQueueStart(aqc.queue, NULL);
         
+        for (int i=0;i<kNumberBuffers;i++)
+        {
+            //创建缓存buf
+            AudioQueueAllocateBuffer(aqc.queue, aqc.frameSize, &aqc.mBuffers[i]);
+            //把创建好的buf添加到缓存队列中取
+            AudioQueueEnqueueBuffer(aqc.queue, aqc.mBuffers[i], 0, NULL);
+        }
+        UInt32 size = sizeof(UInt32) ;
+        UInt32 enableLevelMetering = 1 ;
+        
+        AudioQueueSetProperty(aqc.queue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, size ) ;
+        
+        
+        int status = AudioQueueStart(aqc.queue, NULL);
         NSLog(@"AudioQueueStart = %d", status);
         
     }
@@ -105,18 +92,6 @@ static void AQInputCallback (void * __nullable       inUserData,
 - (void) start
 {
     AudioQueueStart(aqc.queue, NULL);
-    
-    for (int i=0;i<kNumberBuffers;i++)
-    {
-        AudioQueueAllocateBuffer(aqc.queue, aqc.frameSize, &aqc.mBuffers[i]);
-        
-        AudioQueueEnqueueBuffer(aqc.queue, aqc.mBuffers[i], 0, NULL);
-    }
-    UInt32 size = sizeof(UInt32) ;
-    UInt32 enableLevelMetering = 1 ;
-    
-    AudioQueueSetProperty( aqc.queue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, size ) ;
-    
 }
 
 - (void) stop

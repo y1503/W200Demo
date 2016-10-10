@@ -28,9 +28,9 @@ typedef struct AQCallbackStruct
     AudioStreamBasicDescription mDataFormat;
     AudioQueueRef               queue;
     AudioQueueBufferRef         mBuffers[kNumberBuffers];
-    AudioFileID                 outputFile;
+//    AudioFileID                 outputFile;
     SInt32                      frameSize;
-    long long                   recPtr;
+//    long long                   recPtr;
     int                         run;
     
 } AQCallbackStruct;

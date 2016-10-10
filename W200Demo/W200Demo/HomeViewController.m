@@ -20,6 +20,7 @@
 @property (nonatomic, strong) Recorder *mRecorder;
 @property (nonatomic, strong) UIButton *scanBtn;//扫描按钮
 @property (nonatomic, strong) NSMutableArray *billArr;
+@property (nonatomic, strong) NSDate *date;
 
 @end
 
@@ -32,14 +33,18 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(checkHeadset) name:AVAudioSessionRouteChangeNotification object:nil];
     [self initViews];
 
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+//    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
+//    [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
     __weak typeof(self)weakSelf = self;
     self.mRecorder = [[Recorder alloc] init];
     [self.mRecorder setCallHandle:^(NSString *codeStr) {
+        weakSelf.date = [NSDate date];
         [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-        [weakSelf play:@"beep100ms.wav"];
+        [weakSelf playWordSound:@"beep100ms.wav"];
+        [[NSDate date] timeIntervalSinceDate:weakSelf.date];
+        NSLog(@"结束：%f", [[NSDate date] timeIntervalSinceDate:weakSelf.date]);
         weakSelf.billCodeTF.text = codeStr;
         [weakSelf.billArr addObject:codeStr];
         [weakSelf.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
@@ -50,12 +55,12 @@
          weakSelf.messageLbl.text = @"设备就绪";
         
     }];
-    
-    
-    NSArray* input = [[AVAudioSession sharedInstance] currentRoute].inputs;
-    NSArray* output = [[AVAudioSession sharedInstance] currentRoute].outputs;
-    NSLog(@"current intput:%@",input);
-    NSLog(@"current output:%@",output);
+//
+//    
+//    NSArray* input = [[AVAudioSession sharedInstance] currentRoute].inputs;
+//    NSArray* output = [[AVAudioSession sharedInstance] currentRoute].outputs;
+//    NSLog(@"current intput:%@",input);
+//    NSLog(@"current output:%@",output);
     
 }
 
@@ -183,8 +188,10 @@
             break;
         case 301://扫描条码
         {
-            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+//            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
             [self play:@"rsine4khz.wav"];
+//            AudioServicesPlayAlertSound(kSystemSoundzID_Vibrate);
+
         }
             break;
             
@@ -233,6 +240,7 @@
 #pragma mark -- 播放声音
 -(void) playWordSound:(NSString *)soundName
 {
+    [self.mRecorder stop];
     SystemSoundID soundId;
     NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
     if (soundPath == nil) {
@@ -240,8 +248,13 @@
     }
     NSURL *url = [NSURL fileURLWithPath:soundPath];
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)(url), &soundId);
-    AudioServicesPlaySystemSound(soundId);
-    AudioServicesAddSystemSoundCompletion(soundId, NULL, NULL, completionCallback, NULL);
+    //区别在于系统声音调用
+//    AudioServicesPlaySystemSound(soundId);
+    //而提醒音调用
+    AudioServicesPlayAlertSound(soundId);//这个方法会触发震动
+    
+    
+    AudioServicesAddSystemSoundCompletion(soundId, NULL, NULL, completionCallback, (__bridge void * _Nullable)(self.mRecorder));
 }
 
 #pragma mark -- 播放声音结束后的回调函数
@@ -249,7 +262,9 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 {//data,这个data就是AudioServicesAddSystemSoundCompletion最后一个参数
     NSLog(@"completion Callback");
     AudioServicesRemoveSystemSoundCompletion (mySSID);
-    
+    AudioServicesDisposeSystemSoundID(mySSID);
+    Recorder *recorder = (__bridge Recorder *)data;
+   [recorder start];
 }
 
 - (void)play:(NSString *)soundName
