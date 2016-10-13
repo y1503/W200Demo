@@ -42,15 +42,32 @@ typedef enum
     Operation_Type_Battery = 0x0D,//电量
 }Operation_Type;
 
+@class Recorder;
+@protocol RecorderDelegate <NSObject>
+
+@optional
+//获取到数据，音频解析完成
+- (void)parserFinishedFromRecorder:(Recorder *)recorder;
+//音频转码后的数据解析完成
+/*
+ type:数据类型
+ data:数据
+ */
+//收到新数据
+- (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth;
+//收到确认信息
+- (void)receiveFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth;
+@end
 
 @class ViewController;
 @interface Recorder : NSObject{
     AQCallbackStruct aqc;
     AudioFileTypeID fileFormat;
 }
+
 @property (nonatomic, assign) AQCallbackStruct aqc;
-@property (nonatomic , copy) void(^callHandle)(NSString *code);
-@property (nonatomic , copy) void(^callHandleForBat)(int value);
+@property (nonatomic, weak) id<RecorderDelegate>delegate;
+
 
 - (id) init;
 - (void) start;

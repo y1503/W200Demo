@@ -10,7 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "Recorder.h"
 
-@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate>
+@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
 @property (weak, nonatomic) IBOutlet UILabel *messageLbl;
 @property (weak, nonatomic) IBOutlet UIButton *clearBtn;
@@ -22,7 +22,7 @@
 @property (nonatomic, strong) NSMutableArray *billArr;
 @property (nonatomic, assign) int bageValue;//记录当前电量
 @property (nonatomic, strong) NSTimer *timer;//定时器
-
+@property (nonatomic, strong) NSDate *date;
 @end
 
 @implementation HomeViewController
@@ -40,23 +40,8 @@
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
-    __weak typeof(self)weakSelf = self;
     self.mRecorder = [[Recorder alloc] init];
-    [self.mRecorder setCallHandle:^(NSString *codeStr) {
-//        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-        [weakSelf playWordSound:@"beep100ms.wav"];
-        weakSelf.billCodeTF.text = codeStr;
-        [weakSelf.billArr addObject:codeStr];
-        [weakSelf.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
-    }];
-    
-    [self.mRecorder setCallHandleForBat:^(int value) {
-        weakSelf.bageValue = value;
-        [weakSelf.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
-        
-        weakSelf.messageLbl.text = @"设备就绪";
-        
-    }];
+    self.mRecorder.delegate = self;
     
 
 
@@ -108,8 +93,9 @@
     
     self.scanBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     CGSize size = [UIScreen mainScreen].bounds.size;
-    self.scanBtn.frame = CGRectMake((size.width-64)/2.0, size.height - 200, 64, 64);
+    self.scanBtn.frame = CGRectMake((size.width-64)/2.0, size.height - 200, 100, 100);
     [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"button_scan_red"] forState:UIControlStateNormal];
+    [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"resize_music"] forState:UIControlStateSelected];
     [self.scanBtn addTarget:self action:@selector(clickedBtn:) forControlEvents:UIControlEventTouchUpInside];
     self.scanBtn.tag = 301;
     [self.view addSubview:self.scanBtn];
@@ -198,6 +184,7 @@
             break;
         case 301://扫描条码
         {
+            self.scanBtn.selected = YES;
 //            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
             [self play:@"rsine4khz.wav"];
 //            AudioServicesPlayAlertSound(kSystemSoundzID_Vibrate);
@@ -244,7 +231,6 @@
 #pragma mark -- 播放声音
 -(void) playWordSound:(NSString *)soundName
 {
-    [self.mRecorder stop];
     SystemSoundID soundId;
     NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
     if (soundPath == nil) {
@@ -253,10 +239,9 @@
     NSURL *url = [NSURL fileURLWithPath:soundPath];
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)(url), &soundId);
     //区别在于系统声音调用
-//    AudioServicesPlaySystemSound(soundId);
+    AudioServicesPlaySystemSound(soundId);
     //而提醒音调用
-    AudioServicesPlayAlertSound(soundId);//这个方法会触发震动
-    
+//    AudioServicesPlayAlertSound(soundId);//这个方法会触发震动
     
     AudioServicesAddSystemSoundCompletion(soundId, NULL, NULL, completionCallback, (__bridge void * _Nullable)(self.mRecorder));
 }
@@ -268,8 +253,18 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     AudioServicesRemoveSystemSoundCompletion (mySSID);
     AudioServicesDisposeSystemSoundID(mySSID);
     Recorder *recorder = (__bridge Recorder *)data;
-   [recorder start];
+    [recorder start];
 }
+
+#pragma mark -- 震动
+- (void)playShake
+{
+    [self.mRecorder stop];
+    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+    [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.001];
+}
+
+
 
 - (void)play:(NSString *)soundName
 {
@@ -291,7 +286,81 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 }
 
 
-#pragma mark -- UITableViewDelegate,UITableViewDataSource method
+#pragma mark - RecorderDelegate method
+- (void)parserFinishedFromRecorder:(Recorder *)recorder
+{
+    self.scanBtn.selected = NO;
+    self.date = [NSDate date];
+}
+
+- (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
+{
+    //        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+    
+    switch (type) {
+        case Operation_Type_Code://条码
+        {
+            NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:self.date];
+            [self playShake];
+            NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
+            self.billCodeTF.text = codeStr;
+            [self.billArr addObject:[codeStr stringByAppendingFormat:@"----%fs", interval]];
+            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+        }
+            break;
+        case Operation_Type_Battery://电量
+        {
+            int value = *byteData / 10;
+            self.bageValue = value;
+            [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
+    
+            self.messageLbl.text = @"设备就绪";
+
+        }
+            break;
+            
+        default:
+            break;
+    }
+    
+    
+    
+    
+}
+
+- (void)receiveFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
+{
+    switch (type) {
+        case Operation_Type_Code://条码
+        {
+            NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:self.date];
+            [self playShake];
+            NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
+            self.billCodeTF.text = codeStr;
+            [self.billArr addObject:[codeStr stringByAppendingFormat:@"----%fs", interval]];
+            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+            
+        }
+            break;
+        case Operation_Type_Battery://电量
+        {
+            int value = *byteData / 10;
+            NSLog(@"电量：%d", value);
+            self.bageValue = value;
+            [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
+            
+            self.messageLbl.text = @"设备就绪";
+            
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+
+#pragma mark - UITableViewDelegate,UITableViewDataSource method
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     return 1;

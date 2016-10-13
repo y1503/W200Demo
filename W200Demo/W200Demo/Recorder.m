@@ -119,7 +119,9 @@ static void AQInputCallback (void * __nullable       inUserData,
     int ret = audioInterface_wav2digital(data, (int)size/2, retBuf);
     
     if (ret) {
-        NSLog(@"解码结果:%d", ret);
+        if ([self.delegate respondsToSelector:@selector(parserFinishedFromRecorder:)]) {
+            [self.delegate parserFinishedFromRecorder:self];
+        }
         [self jiebao:retBuf length:ret];
         
     }
@@ -145,6 +147,10 @@ static void AQInputCallback (void * __nullable       inUserData,
     if (length < 7) {//最小包长度为7，所以不够一个包直接返回
         return;
     }
+    NSLog(@"开始");
+    for (int i = 0; i < length ; i++) {
+        NSLog(@"----0x%x", dataBuf[i]);
+    }
     
     int i = 0;
     while (i < length) {
@@ -161,17 +167,23 @@ static void AQInputCallback (void * __nullable       inUserData,
                 int b = dataBuf[i + frameLength + 1];
                 
                 if (a == b) {//校验通过
-                    char type = dataBuf[i+1];//获取收发类型
-                    switch (type) {
+                    char flag = dataBuf[i+1];//获取收发类型
+                    Operation_Type type = dataBuf[i+2];
+                    unsigned char *byteData = dataBuf+i+2+1;
+                    int dataLength = frameLength-2;
+                    switch (flag) {
                         case 'R'://收到确认信息
                         {
-                            NSLog(@"收");
-                            [self send:dataBuf[i+2] data:dataBuf+i+2+1 dataLenght:frameLength-2];
+                            if ([self.delegate respondsToSelector:@selector(receiveFromRecorder:type:byteData:dataLenth:)]) {
+                                [self.delegate receiveFromRecorder:self type:type byteData:byteData dataLenth:dataLength];
+                            }
                         }
                             break;
                         case 'S'://收到是新的数据
                         {
-                            [self send:dataBuf[i+2] data:dataBuf+i+2+1 dataLenght:frameLength-2];
+                            if ([self.delegate respondsToSelector:@selector(sendFromRecorder:type:byteData:dataLenth:)]) {
+                                [self.delegate sendFromRecorder:self type:type byteData:byteData dataLenth:dataLength];
+                            }
                         }
                             break;
                             
@@ -187,30 +199,5 @@ static void AQInputCallback (void * __nullable       inUserData,
     }
 }
 
-- (void)send:(Operation_Type)type data:(unsigned char *)data dataLenght:(int)length
-{
-    switch (type) {
-        case Operation_Type_Code://条码指令
-        {
-            NSString *codeStr = [[NSString alloc] initWithBytes:data length:length encoding:NSUTF8StringEncoding];
-            NSLog(@"扫描出来的条码：%@", codeStr);
-            if (self.callHandle) {
-                self.callHandle(codeStr);
-            }
-        }
-            break;
-        case Operation_Type_Battery://电量获取
-        {
-            NSLog(@"电量值：%d", data[0]);
-            if (self.callHandleForBat) {
-                self.callHandleForBat(data[0]/10 + 1);
-            }
-        }
-            break;
-            
-        default:
-            break;
-    }
-}
 
 @end
