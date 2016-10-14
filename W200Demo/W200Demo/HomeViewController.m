@@ -265,7 +265,15 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 {
     [self.mRecorder stop];
     AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
-    [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.001];
+    
+    CGSize size = [UIScreen mainScreen].bounds.size;
+    
+    if (size.width == 320 && size.height == 568) {
+        [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.01];
+    }else{
+        [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.001];
+    }
+    
 }
 
 
