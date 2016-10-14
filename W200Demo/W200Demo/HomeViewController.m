@@ -22,7 +22,6 @@
 @property (nonatomic, strong) NSMutableArray *billArr;
 @property (nonatomic, assign) int bageValue;//记录当前电量
 @property (nonatomic, strong) NSTimer *timer;//定时器
-@property (nonatomic, strong) NSDate *date;
 @end
 
 @implementation HomeViewController
@@ -94,8 +93,11 @@
     self.scanBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     CGSize size = [UIScreen mainScreen].bounds.size;
     self.scanBtn.frame = CGRectMake((size.width-64)/2.0, size.height - 200, 100, 100);
-    [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"button_scan_red"] forState:UIControlStateNormal];
-    [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"resize_music"] forState:UIControlStateSelected];
+    [self.scanBtn setTitle:@"扫描" forState:UIControlStateNormal];
+    [self.scanBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"button_blue"] forState:UIControlStateNormal];
+    [self.scanBtn setBackgroundImage:[UIImage imageNamed:@"button_green"] forState:UIControlStateSelected];
+    
     [self.scanBtn addTarget:self action:@selector(clickedBtn:) forControlEvents:UIControlEventTouchUpInside];
     self.scanBtn.tag = 301;
     [self.view addSubview:self.scanBtn];
@@ -184,12 +186,10 @@
             break;
         case 301://扫描条码
         {
-            self.scanBtn.selected = !self.scanBtn.selected;
+            self.scanBtn.selected = YES;
             
-            if (self.scanBtn.selected) {
-//                [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-                [self play:@"rsine4khz.wav"];
-            }
+            //[[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+            [self play:@"rsine4khz.wav"];
 
         }
             break;
@@ -294,7 +294,6 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 - (void)parserFinishedFromRecorder:(Recorder *)recorder
 {
     self.scanBtn.selected = NO;
-    self.date = [NSDate date];
 }
 
 - (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
@@ -304,11 +303,10 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:self.date];
             [self playShake];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
-            [self.billArr addObject:[codeStr stringByAppendingFormat:@"----%fs", interval]];
+            [self.billArr addObject:codeStr];
             [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
         }
             break;
@@ -337,11 +335,10 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:self.date];
             [self playShake];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
-            [self.billArr addObject:[codeStr stringByAppendingFormat:@"----%fs", interval]];
+            [self.billArr addObject:codeStr];
             [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
             
         }

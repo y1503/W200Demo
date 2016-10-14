@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D9415F7F1DB0844A008FDFDB /* button_blue.png in Resources */ = {isa = PBXBuildFile; fileRef = D9415F7D1DB0844A008FDFDB /* button_blue.png */; };
+		D9415F801DB0844A008FDFDB /* button_green.png in Resources */ = {isa = PBXBuildFile; fileRef = D9415F7E1DB0844A008FDFDB /* button_green.png */; };
 		D94A6B041D9A95C8000C4F76 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D94A6B031D9A95C8000C4F76 /* main.m */; };
 		D94A6B071D9A95C8000C4F76 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D94A6B061D9A95C8000C4F76 /* AppDelegate.m */; };
 		D94A6B0F1D9A95C8000C4F76 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D94A6B0E1D9A95C8000C4F76 /* Assets.xcassets */; };
@@ -71,6 +73,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D9415F7D1DB0844A008FDFDB /* button_blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_blue.png; sourceTree = "<group>"; };
+		D9415F7E1DB0844A008FDFDB /* button_green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_green.png; sourceTree = "<group>"; };
 		D94A6AFF1D9A95C8000C4F76 /* W200Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = W200Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D94A6B031D9A95C8000C4F76 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		D94A6B051D9A95C8000C4F76 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -233,6 +237,8 @@
 		D94A6B351D9A9911000C4F76 /* images */ = {
 			isa = PBXGroup;
 			children = (
+				D9415F7D1DB0844A008FDFDB /* button_blue.png */,
+				D9415F7E1DB0844A008FDFDB /* button_green.png */,
 				D98EDA821D9D3B7B00501111 /* charge1.png */,
 				D98EDA831D9D3B7B00501111 /* charge5.png */,
 				D98EDA841D9D3B7B00501111 /* charge6.png */,
@@ -407,6 +413,7 @@
 				D94A6B441D9A9911000C4F76 /* charge4.png in Resources */,
 				D94A6B771D9AC3EA000C4F76 /* jingyin10ms.wav in Resources */,
 				D94A6B431D9A9911000C4F76 /* charge3.png in Resources */,
+				D9415F801DB0844A008FDFDB /* button_green.png in Resources */,
 				D94A6B6F1D9AC3EA000C4F76 /* beep100ms.wav in Resources */,
 				D98EDA811D9D36B000501111 /* rsine500hz.wav in Resources */,
 				D94A6B3F1D9A9911000C4F76 /* button_scan_red.png in Resources */,
@@ -417,6 +424,7 @@
 				D94A6B7C1D9AC3EA000C4F76 /* 音频使用说明.txt in Resources */,
 				D98EDA8E1D9D3B7B00501111 /* charge9.png in Resources */,
 				D94A6B121D9A95C8000C4F76 /* LaunchScreen.storyboard in Resources */,
+				D9415F7F1DB0844A008FDFDB /* button_blue.png in Resources */,
 				D94A6B471D9A9911000C4F76 /* xlistview_arrow.png in Resources */,
 				D98EDA8D1D9D3B7B00501111 /* charge8.png in Resources */,
 				D94A6B791D9AC3EA000C4F76 /* rsine4khz.wav in Resources */,
