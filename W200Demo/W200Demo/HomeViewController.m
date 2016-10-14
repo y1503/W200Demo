@@ -184,10 +184,12 @@
             break;
         case 301://扫描条码
         {
-            self.scanBtn.selected = YES;
-//            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-            [self play:@"rsine4khz.wav"];
-//            AudioServicesPlayAlertSound(kSystemSoundzID_Vibrate);
+            self.scanBtn.selected = !self.scanBtn.selected;
+            
+            if (self.scanBtn.selected) {
+//                [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+                [self play:@"rsine4khz.wav"];
+            }
 
         }
             break;
@@ -212,6 +214,8 @@
         self.messageLbl.text = @"未插入W200";
         [self.batteryBtn setImage:[UIImage imageNamed:@"charge0"] forState:UIControlStateNormal];
     }
+    
+    self.scanBtn.selected = NO;
 }
 
 #pragma mark -- 检测耳机是否插入
