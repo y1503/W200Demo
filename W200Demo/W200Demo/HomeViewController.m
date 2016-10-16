@@ -26,6 +26,7 @@
 @property (nonatomic, assign) int bageValue;//记录当前电量
 @property (nonatomic, strong) NSTimer *timer;//定时器
 @property (nonatomic, strong) NSString *deviceStr;//记录当前手机的型号
+@property (nonatomic, strong) NSOperationQueue *queue;
 @end
 
 @implementation HomeViewController
@@ -54,13 +55,21 @@
 //    NSLog(@"current intput:%@",input);
 //    NSLog(@"current output:%@",output);
     
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(checkBageValue:) userInfo:nil repeats:YES];
+    self.timer.fireDate = [NSDate distantFuture];
+    
+    self.queue = [NSOperationQueue mainQueue];
+    self.queue.maxConcurrentOperationCount = 1;
 }
 
-- (void)checkBageValue
+- (void)checkBageValue:(NSTimer *)timer
 {
     if (self.bageValue == -1) {
         self.messageLbl.text = @"请重新匹配W200设备";
+    }else if ([self.messageLbl.text isEqualToString:@"匹配W200设备..."]){
+        [self.checkBagePlayer play];
     }
+    timer.fireDate = [NSDate distantFuture];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -209,19 +218,21 @@
 #pragma mark -- 耳机插拔动作的通知响应方法
 - (void)checkHeadset
 {
-    if ([self isHeadsetPluggedIn]) {
-        //检测到设备插入检测一次
-        [self.checkBagePlayer play];
-        self.messageLbl.text = @"匹配W200设备...";
-        self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(checkBageValue) userInfo:nil repeats:NO];
+    [self.queue addOperationWithBlock:^{
+        if ([self isHeadsetPluggedIn]) {
+            //检测到设备插入检测一次
+            [self.checkBagePlayer play];
+            self.messageLbl.text = @"匹配W200设备...";
+            self.timer.fireDate = [NSDate dateWithTimeIntervalSinceNow:1];
+            
+        }else{
+            NSLog(@"耳机拔出");
+            self.messageLbl.text = @"未插入W200";
+            [self.batteryBtn setImage:[UIImage imageNamed:@"charge0"] forState:UIControlStateNormal];
+        }
         
-    }else{
-        NSLog(@"耳机拔出");
-        self.messageLbl.text = @"未插入W200";
-        [self.batteryBtn setImage:[UIImage imageNamed:@"charge0"] forState:UIControlStateNormal];
-    }
-    
-    self.scanBtn.selected = NO;
+        self.scanBtn.selected = NO;
+    }];
 }
 
 #pragma mark -- 检测耳机是否插入
@@ -328,8 +339,6 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 
 - (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
 {
-    //        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-    
     switch (type) {
         case Operation_Type_Code://条码
         {
@@ -347,6 +356,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
             [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
     
             self.messageLbl.text = @"设备就绪";
+            NSLog(@"检测到电量了");
 
         }
             break;
@@ -381,7 +391,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
             [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
             
             self.messageLbl.text = @"设备就绪";
-            
+            NSLog(@"检测到电量了2");
         }
             break;
             
