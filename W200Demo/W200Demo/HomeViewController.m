@@ -9,6 +9,8 @@
 #import "HomeViewController.h"
 #import <AVFoundation/AVFoundation.h>
 #import "Recorder.h"
+#import <sys/utsname.h>
+#import "UIDevice+DeviceModel.h"
 
 @interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
@@ -16,12 +18,14 @@
 @property (weak, nonatomic) IBOutlet UIButton *clearBtn;
 @property (weak, nonatomic) IBOutlet UITableView *mTableView;
 @property (nonatomic, strong) UIButton *batteryBtn;//电池
-@property (nonatomic, strong) AVAudioPlayer *movePlayer;
+@property (nonatomic, strong) AVAudioPlayer *scanPlayer;//扫描条码用
+@property (nonatomic, strong) AVAudioPlayer *checkBagePlayer;//检测电量用
 @property (nonatomic, strong) Recorder *mRecorder;
 @property (nonatomic, strong) UIButton *scanBtn;//扫描按钮
 @property (nonatomic, strong) NSMutableArray *billArr;
 @property (nonatomic, assign) int bageValue;//记录当前电量
 @property (nonatomic, strong) NSTimer *timer;//定时器
+@property (nonatomic, strong) NSString *deviceStr;//记录当前手机的型号
 @end
 
 @implementation HomeViewController
@@ -35,14 +39,15 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(checkHeadset) name:AVAudioSessionRouteChangeNotification object:nil];
     [self initViews];
 
-//    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
     self.mRecorder = [[Recorder alloc] init];
     self.mRecorder.delegate = self;
-    
+    [self.mRecorder start];
 
+    self.deviceStr = [[UIDevice currentDevice] deviceModel];
+    NSLog(@"手机型号：%@", self.deviceStr);
 
 //    NSArray* input = [[AVAudioSession sharedInstance] currentRoute].inputs;
 //    NSArray* output = [[AVAudioSession sharedInstance] currentRoute].outputs;
@@ -107,7 +112,7 @@
     [self.scanBtn addGestureRecognizer:pan];
     
     //开启后检测一次
-    [self play:@"rsine500hz.wav"];
+    [self.checkBagePlayer play];
 }
 
 
@@ -189,7 +194,8 @@
             self.scanBtn.selected = YES;
             
             //[[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-            [self play:@"rsine4khz.wav"];
+            [self.scanPlayer play];
+            AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
 
         }
             break;
@@ -205,7 +211,7 @@
 {
     if ([self isHeadsetPluggedIn]) {
         //检测到设备插入检测一次
-        [self play:@"rsine500hz.wav"];
+        [self.checkBagePlayer play];
         self.messageLbl.text = @"匹配W200设备...";
         self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(checkBageValue) userInfo:nil repeats:NO];
         
@@ -266,9 +272,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     [self.mRecorder stop];
     AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
     
-    CGSize size = [UIScreen mainScreen].bounds.size;
-    
-    if (size.width == 320 && size.height == 568) {
+    if ([self.deviceStr isEqualToString:Device_iPhone5]) {
         [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.01];
     }else{
         [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.001];
@@ -276,27 +280,45 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     
 }
 
-
-
-- (void)play:(NSString *)soundName
+#pragma mark -- 懒加载扫描播放器
+- (AVAudioPlayer *)scanPlayer
 {
-    NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
-    if (soundPath == nil) {
-        return;
+    if (_scanPlayer == nil) {
+        NSString *soundPath = [[NSBundle mainBundle] pathForResource:@"rsine4khz.wav" ofType:nil];
+        NSURL *url = [NSURL fileURLWithPath:soundPath];
+        NSError *err = nil;
+        _scanPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&err];
+        _scanPlayer.volume = 1.0;
+        _scanPlayer.delegate = self;
+        [_scanPlayer prepareToPlay];
+        if (err != nil) {
+            NSLog(@"scan player init error:%@",err);
+            _scanPlayer = nil;
+        }
     }
-    NSURL *url = [NSURL fileURLWithPath:soundPath];
-    NSError *err = nil;
-    self.movePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&err];
-    self.movePlayer.volume = 1.0;
-    self.movePlayer.delegate = self;
-    [self.movePlayer prepareToPlay];
-    if (err!=nil) {
-        NSLog(@"move player init error:%@",err);
-    }else {
-        [self.movePlayer play];
-    }
+    
+    return _scanPlayer;
 }
 
+#pragma mark -- 懒加载电量检测播放器
+- (AVAudioPlayer *)checkBagePlayer
+{
+    if (_checkBagePlayer == nil) {
+        NSString *soundPath = [[NSBundle mainBundle] pathForResource:@"rsine500hz.wav" ofType:nil];
+        NSURL *url = [NSURL fileURLWithPath:soundPath];
+        NSError *err = nil;
+        _checkBagePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&err];
+        _checkBagePlayer.volume = 1.0;
+        _checkBagePlayer.delegate = self;
+        [_checkBagePlayer prepareToPlay];
+        if (err != nil) {
+            NSLog(@"scan player init error:%@",err);
+            _checkBagePlayer = nil;
+        }
+    }
+    
+    return _checkBagePlayer;
+}
 
 #pragma mark - RecorderDelegate method
 - (void)parserFinishedFromRecorder:(Recorder *)recorder
@@ -315,7 +337,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
-            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationTop];
         }
             break;
         case Operation_Type_Battery://电量

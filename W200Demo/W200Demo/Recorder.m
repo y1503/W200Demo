@@ -21,7 +21,7 @@ static void AQInputCallback (void * __nullable       inUserData,
 
 {
     
-    Recorder * engine = (__bridge Recorder *) inUserData;
+    Recorder *engine = (__bridge Recorder *) inUserData;
     if (inNumPackets > 0)  
     {
         [engine processAudioBuffer:inBuffer withQueue:inAudioQueue]; 
@@ -51,8 +51,8 @@ static void AQInputCallback (void * __nullable       inUserData,
         aqc.frameSize = kFrameSize;//缓存队列中buf的大小
         aqc.mDataFormat.mBytesPerPacket = aqc.mDataFormat.mBytesPerFrame * aqc.mDataFormat.mFramesPerPacket;
         
-        AudioQueueNewInput(&aqc.mDataFormat, AQInputCallback, (__bridge void * _Nullable)(self), NULL, kCFRunLoopCommonModes, 0, &aqc.queue);
-        
+        SInt32 status = AudioQueueNewInput(&aqc.mDataFormat, AQInputCallback, (__bridge void * _Nullable)(self), NULL, kCFRunLoopCommonModes, 0, &aqc.queue);
+        NSLog(@"status = %d", status);
         
         //        aqc.recPtr = 0;
         aqc.run = 1;
@@ -71,11 +71,6 @@ static void AQInputCallback (void * __nullable       inUserData,
         UInt32 enableLevelMetering = 1 ;
         
         AudioQueueSetProperty(aqc.queue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, size ) ;
-        
-        
-        int status = AudioQueueStart(aqc.queue, NULL);
-        NSLog(@"AudioQueueStart = %d", status);
-        
     }
     
     return self;
@@ -93,7 +88,7 @@ static void AQInputCallback (void * __nullable       inUserData,
 
 - (void) start
 {
-    AudioQueueStart(aqc.queue, NULL);
+    AudioQueueStart(aqc.queue, NULL); 
 }
 
 - (void) stop
