@@ -279,10 +279,9 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 
 #pragma mark -- 震动
 - (void)playShake
-{
+{//由于实时录音时，无法播放震动，故而先暂停一下
     [self.mRecorder stop];
     AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
-    
     if ([self.deviceStr isEqualToString:Device_iPhone5]) {
         [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.01];
     }else{
