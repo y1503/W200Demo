@@ -142,10 +142,10 @@ static void AQInputCallback (void * __nullable       inUserData,
     if (length < 7) {//最小包长度为7，所以不够一个包直接返回
         return;
     }
-    NSLog(@"开始");
-    for (int i = 0; i < length ; i++) {
-        NSLog(@"----0x%x", dataBuf[i]);
-    }
+//    NSLog(@"开始");
+//    for (int i = 0; i < length ; i++) {
+//        NSLog(@"----0x%x", dataBuf[i]);
+//    }
     
     int i = 0;
     while (i < length) {

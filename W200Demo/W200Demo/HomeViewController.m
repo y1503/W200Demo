@@ -30,6 +30,9 @@
 @end
 
 @implementation HomeViewController
+{
+    SystemSoundID soundId;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -204,8 +207,6 @@
             
             //[[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
             [self.scanPlayer play];
-            AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
-
         }
             break;
             
@@ -252,17 +253,20 @@
 #pragma mark -- 播放声音
 -(void) playWordSound:(NSString *)soundName
 {
-    SystemSoundID soundId;
-    NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
-    if (soundPath == nil) {
-        return;
+    [self.mRecorder stop];
+    if (soundId == 0) {
+        NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
+        if (soundPath == nil) {
+            return;
+        }
+        NSURL *url = [NSURL fileURLWithPath:soundPath];
+        AudioServicesCreateSystemSoundID((__bridge CFURLRef)(url), &soundId);
     }
-    NSURL *url = [NSURL fileURLWithPath:soundPath];
-    AudioServicesCreateSystemSoundID((__bridge CFURLRef)(url), &soundId);
+    
     //区别在于系统声音调用
-    AudioServicesPlaySystemSound(soundId);
+//    AudioServicesPlaySystemSound(soundId);
     //而提醒音调用
-//    AudioServicesPlayAlertSound(soundId);//这个方法会触发震动
+    AudioServicesPlayAlertSound(soundId);//这个方法会触发震动
     
     AudioServicesAddSystemSoundCompletion(soundId, NULL, NULL, completionCallback, (__bridge void * _Nullable)(self.mRecorder));
 }
@@ -271,8 +275,8 @@
 static void completionCallback (SystemSoundID  mySSID, void* data)
 {//data,这个data就是AudioServicesAddSystemSoundCompletion最后一个参数
     NSLog(@"completion Callback");
-    AudioServicesRemoveSystemSoundCompletion (mySSID);
-    AudioServicesDisposeSystemSoundID(mySSID);
+//    AudioServicesRemoveSystemSoundCompletion (mySSID);
+//    AudioServicesDisposeSystemSoundID(mySSID);
     Recorder *recorder = (__bridge Recorder *)data;
     [recorder start];
 }
@@ -341,7 +345,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShake];
+            [self playWordSound:@"rsine4khz10ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
@@ -364,9 +368,6 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
             break;
     }
     
-    
-    
-    
 }
 
 - (void)receiveFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
@@ -374,7 +375,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShake];
+            [self playWordSound:@"rsine4khz10ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
