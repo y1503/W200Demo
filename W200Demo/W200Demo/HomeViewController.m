@@ -11,6 +11,7 @@
 #import "Recorder.h"
 #import <sys/utsname.h>
 #import "UIDevice+DeviceModel.h"
+#import <MediaPlayer/MediaPlayer.h>
 
 @interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
@@ -27,6 +28,7 @@
 @property (nonatomic, strong) NSTimer *timer;//定时器
 @property (nonatomic, strong) NSString *deviceStr;//记录当前手机的型号
 @property (nonatomic, strong) NSOperationQueue *queue;
+@property (nonatomic, assign) float volume;//保存当前的音量
 @end
 
 @implementation HomeViewController
@@ -37,6 +39,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    MPMusicPlayerController *mp = [MPMusicPlayerController applicationMusicPlayer];
+    mp.volume = 1.0;//0为最小1为最大
+    
     self.bageValue = -1;
     
     //耳机插入和拔出的通知
@@ -79,6 +84,9 @@
 {
     [super viewWillAppear:animated];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    
+    
+    
     [self.mRecorder start];
 }
 
@@ -207,7 +215,7 @@
             
             //[[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
             [self.scanPlayer play];
-        }
+            }
             break;
             
         default:
@@ -253,7 +261,7 @@
 #pragma mark -- 播放声音
 -(void) playWordSound:(NSString *)soundName
 {
-    [self.mRecorder stop];
+//    [self.mRecorder stop];
     if (soundId == 0) {
         NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
         if (soundPath == nil) {
@@ -278,7 +286,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
 //    AudioServicesRemoveSystemSoundCompletion (mySSID);
 //    AudioServicesDisposeSystemSoundID(mySSID);
     Recorder *recorder = (__bridge Recorder *)data;
-    [recorder start];
+//    [recorder start];
 }
 
 #pragma mark -- 震动
@@ -292,6 +300,31 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
         [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:0.001];
     }
     
+}
+
+extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
+#pragma mark -- 私有API控制震动时间,单位毫秒
+- (void)playShakeWithMS:(int)ms
+{
+    [self.mRecorder stop];
+    
+    if (ms < 0) {
+        ms = 0;
+    }
+    
+    NSMutableDictionary* dict = [NSMutableDictionary dictionary];
+    NSMutableArray* arr = [NSMutableArray array];
+
+    [arr addObject:[NSNumber numberWithBool:YES]]; //vibrate for 2000ms
+    [arr addObject:[NSNumber numberWithInt:ms]];
+
+
+    [dict setObject:arr forKey:@"VibePattern"];
+    [dict setObject:[NSNumber numberWithFloat:0.3] forKey:@"Intensity"];
+
+    AudioServicesPlaySystemSoundWithVibration(4095,nil, dict);
+    
+    [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:ms/1000.0f];
 }
 
 #pragma mark -- 懒加载扫描播放器
@@ -345,7 +378,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playWordSound:@"rsine4khz10ms.wav"];
+            [self playShakeWithMS:50];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
@@ -375,7 +408,7 @@ static void completionCallback (SystemSoundID  mySSID, void* data)
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playWordSound:@"rsine4khz10ms.wav"];
+            [self playShakeWithMS:50];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];

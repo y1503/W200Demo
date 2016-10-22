@@ -54,6 +54,8 @@
 		D98EDA8E1D9D3B7B00501111 /* charge9.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA871D9D3B7B00501111 /* charge9.png */; };
 		D98EDA8F1D9D3B7B00501111 /* charge10.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA881D9D3B7B00501111 /* charge10.png */; };
 		D99B9D581DB3A9A300A587F1 /* UIDevice+DeviceModel.m in Sources */ = {isa = PBXBuildFile; fileRef = D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */; };
+		D9BA907C1DBB102A0060238C /* beep5ms.wav in Resources */ = {isa = PBXBuildFile; fileRef = D9BA907B1DBB102A0060238C /* beep5ms.wav */; };
+		D9BA90811DBB1BCC0060238C /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9BA90801DBB1BCC0060238C /* MediaPlayer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +136,8 @@
 		D98EDA881D9D3B7B00501111 /* charge10.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = charge10.png; sourceTree = "<group>"; };
 		D99B9D561DB3A9A300A587F1 /* UIDevice+DeviceModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIDevice+DeviceModel.h"; sourceTree = "<group>"; };
 		D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+DeviceModel.m"; sourceTree = "<group>"; };
+		D9BA907B1DBB102A0060238C /* beep5ms.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = beep5ms.wav; sourceTree = "<group>"; };
+		D9BA90801DBB1BCC0060238C /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +145,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9BA90811DBB1BCC0060238C /* MediaPlayer.framework in Frameworks */,
 				D94A6B581D9AA6A5000C4F76 /* AudioToolbox.framework in Frameworks */,
 				D94A6B561D9AA689000C4F76 /* CoreAudio.framework in Frameworks */,
 				D94A6B541D9AA64B000C4F76 /* AVFoundation.framework in Frameworks */,
@@ -266,6 +271,7 @@
 		D94A6B521D9AA64B000C4F76 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D9BA90801DBB1BCC0060238C /* MediaPlayer.framework */,
 				D94A6B571D9AA6A5000C4F76 /* AudioToolbox.framework */,
 				D94A6B551D9AA689000C4F76 /* CoreAudio.framework */,
 				D94A6B531D9AA64B000C4F76 /* AVFoundation.framework */,
@@ -276,6 +282,7 @@
 		D94A6B5F1D9AC3EA000C4F76 /* W200音频 */ = {
 			isa = PBXGroup;
 			children = (
+				D9BA907B1DBB102A0060238C /* beep5ms.wav */,
 				D94A6B601D9AC3EA000C4F76 /* beep100ms.wav */,
 				D94A6B611D9AC3EA000C4F76 /* detectdata.wav */,
 				D94A6B621D9AC3EA000C4F76 /* doublesine4khz.wav */,
@@ -432,6 +439,7 @@
 				D9415F7F1DB0844A008FDFDB /* button_blue.png in Resources */,
 				D94A6B471D9A9911000C4F76 /* xlistview_arrow.png in Resources */,
 				D98EDA8D1D9D3B7B00501111 /* charge8.png in Resources */,
+				D9BA907C1DBB102A0060238C /* beep5ms.wav in Resources */,
 				D94A6B791D9AC3EA000C4F76 /* rsine4khz.wav in Resources */,
 				D94A6B0F1D9A95C8000C4F76 /* Assets.xcassets in Resources */,
 				D94A6B461D9A9911000C4F76 /* resize_music.png in Resources */,
