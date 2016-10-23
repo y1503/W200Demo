@@ -13,7 +13,7 @@
 #import "UIDevice+DeviceModel.h"
 #import <MediaPlayer/MediaPlayer.h>
 
-@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate>
+@interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate, UIAlertViewDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
 @property (weak, nonatomic) IBOutlet UILabel *messageLbl;
 @property (weak, nonatomic) IBOutlet UIButton *clearBtn;
@@ -85,9 +85,24 @@
     [super viewWillAppear:animated];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
+    [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+        if (granted) {
+            NSLog(@"获取到mic访问权限");
+        } else {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"请开启允许【W200】访问您的麦克风" delegate:self cancelButtonTitle:@"忽略" otherButtonTitles:@"去开启", nil];
+            [alert show];
+        } 
+    }];
     
     
     [self.mRecorder start];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 1) {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated
