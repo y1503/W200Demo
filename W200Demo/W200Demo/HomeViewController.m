@@ -276,7 +276,7 @@
 #pragma mark -- 播放声音
 -(void) playWordSound:(NSString *)soundName
 {
-//    [self.mRecorder stop];
+    [self.mRecorder stop];
     if (soundId == 0) {
         NSString *soundPath = [[NSBundle mainBundle] pathForResource:soundName ofType:nil];
         if (soundPath == nil) {
@@ -298,10 +298,10 @@
 static void completionCallback (SystemSoundID  mySSID, void* data)
 {//data,这个data就是AudioServicesAddSystemSoundCompletion最后一个参数
     NSLog(@"completion Callback");
-//    AudioServicesRemoveSystemSoundCompletion (mySSID);
-//    AudioServicesDisposeSystemSoundID(mySSID);
+    AudioServicesRemoveSystemSoundCompletion (mySSID);
+    AudioServicesDisposeSystemSoundID(mySSID);
     Recorder *recorder = (__bridge Recorder *)data;
-//    [recorder start];
+    [recorder start];
 }
 
 #pragma mark -- 震动
@@ -393,7 +393,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShakeWithMS:50];
+            [self playShakeWithMS:100];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
@@ -423,7 +423,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShakeWithMS:50];
+            [self playShakeWithMS:100];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
