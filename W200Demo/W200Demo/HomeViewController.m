@@ -297,9 +297,9 @@
 #pragma mark -- 播放声音结束后的回调函数
 static void completionCallback (SystemSoundID  mySSID, void* data)
 {//data,这个data就是AudioServicesAddSystemSoundCompletion最后一个参数
-    NSLog(@"completion Callback");
-    AudioServicesRemoveSystemSoundCompletion (mySSID);
-    AudioServicesDisposeSystemSoundID(mySSID);
+//    NSLog(@"completion Callback");
+//    AudioServicesRemoveSystemSoundCompletion (mySSID);
+//    AudioServicesDisposeSystemSoundID(mySSID);
     Recorder *recorder = (__bridge Recorder *)data;
     [recorder start];
 }
@@ -385,7 +385,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
 #pragma mark - RecorderDelegate method
 - (void)parserFinishedFromRecorder:(Recorder *)recorder
 {
-    self.scanBtn.selected = NO;
+    
 }
 
 - (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
@@ -393,21 +393,28 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
+            self.scanBtn.selected = NO;
             [self playWordSound:@"beep5ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
-            self.billCodeTF.text = codeStr;
-            [self.billArr addObject:codeStr];
-            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationTop];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                self.billCodeTF.text = codeStr;
+                [self.billArr insertObject:codeStr atIndex:0];
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+                [self.mTableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                [self.mTableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
+            });
         }
             break;
         case Operation_Type_Battery://电量
         {
             int value = *byteData / 10;
+            NSLog(@"电量：%d", value);
             self.bageValue = value;
-            [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
-    
-            self.messageLbl.text = @"设备就绪";
-            NSLog(@"检测到电量了");
+            NSLog(@"检测到电量了2");
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                self.messageLbl.text = @"设备就绪";
+                [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
+            });
 
         }
             break;
@@ -423,11 +430,16 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
-           [self playWordSound:@"beep5ms.wav"];
+            [self playWordSound:@"beep5ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
-            self.billCodeTF.text = codeStr;
-            [self.billArr addObject:codeStr];
-            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationTop];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                self.billCodeTF.text = codeStr;
+                [self.billArr insertObject:codeStr atIndex:0];
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+                [self.mTableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                [self.mTableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
+            });
+
             
         }
             break;
@@ -436,10 +448,11 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
             int value = *byteData / 10;
             NSLog(@"电量：%d", value);
             self.bageValue = value;
-            [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
-            
-            self.messageLbl.text = @"设备就绪";
             NSLog(@"检测到电量了2");
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                self.messageLbl.text = @"设备就绪";
+                [self.batteryBtn setImage:[UIImage imageNamed:[NSString stringWithFormat:@"charge%i", value]] forState:UIControlStateNormal];
+            });
         }
             break;
             
