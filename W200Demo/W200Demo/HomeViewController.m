@@ -393,7 +393,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShakeWithMS:100];
+            [self playWordSound:@"beep5ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
@@ -423,11 +423,11 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     switch (type) {
         case Operation_Type_Code://条码
         {
-            [self playShakeWithMS:100];
+           [self playWordSound:@"beep5ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
             self.billCodeTF.text = codeStr;
             [self.billArr addObject:codeStr];
-            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+            [self.mTableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationTop];
             
         }
             break;
