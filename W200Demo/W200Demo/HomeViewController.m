@@ -68,6 +68,9 @@
     
     self.queue = [NSOperationQueue mainQueue];
     self.queue.maxConcurrentOperationCount = 1;
+    
+    //进来先检测一次
+    [self checkHeadset];
 }
 
 - (void)checkBageValue:(NSTimer *)timer
