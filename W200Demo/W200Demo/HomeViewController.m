@@ -12,6 +12,7 @@
 #import <sys/utsname.h>
 #import "UIDevice+DeviceModel.h"
 #import <MediaPlayer/MediaPlayer.h>
+#import "KEVolumeUtil.h"
 
 @interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate, UIAlertViewDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
@@ -39,9 +40,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    MPMusicPlayerController *mp = [MPMusicPlayerController applicationMusicPlayer];
-    mp.volume = 1.0;//0为最小1为最大
-    
     self.bageValue = -1;
     
     //耳机插入和拔出的通知
@@ -69,9 +67,51 @@
     self.queue = [NSOperationQueue mainQueue];
     self.queue.maxConcurrentOperationCount = 1;
     
+    
+     [self setVolumeValue];
+//    [[KEVolumeUtil shareInstance] setVolumeValue:1.0];
+    
     //进来先检测一次
     [self checkHeadset];
 }
+
+- (void)setVolumeValue
+{
+    MPVolumeView *volumeView = [[MPVolumeView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+    [self.view addSubview:volumeView];
+//    volumeView.hidden = YES;
+    UISlider* volumeViewSlider = nil;
+    for (UIView *view in [volumeView subviews]){
+        if (view.class == NSClassFromString(@"MPVolumeSlider")){
+            volumeViewSlider = (UISlider*)view;
+            break;
+        }
+    }
+
+    // retrieve system volume
+    float systemVolume = volumeViewSlider.value;
+    if (systemVolume < 0.5) {
+//        MPMusicPlayerController *mp = [MPMusicPlayerController applicationMusicPlayer];
+//        mp.volume = 1.0;//0为最小1为最大
+    }
+    
+    
+    NSLog(@"系统当前音量：%f", systemVolume);
+    [volumeViewSlider setValue:1.0 animated:YES];
+    
+    // send UI control event to make the change effect right now.
+//    [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(volumeChanged:) name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+}
+
+
+- (void)volumeChanged:(NSNotification *)notification
+{
+    
+}
+
 
 - (void)checkBageValue:(NSTimer *)timer
 {
@@ -86,7 +126,7 @@
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+//    [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
     [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
         if (granted) {
@@ -101,18 +141,18 @@
     [self.mRecorder start];
 }
 
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+//    [self.mRecorder stop];
+//    [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+}
+
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
     if (buttonIndex == 1) {
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
     }
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-    [super viewWillDisappear:animated];
-    [self.mRecorder stop];
-    [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
 }
 
 #pragma mark -- 初始化视图
@@ -509,6 +549,11 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
 {
     
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
 }
 
 @end

@@ -45,6 +45,7 @@
 		D94A6B7B1D9AC3EA000C4F76 /* test_2k_8820_200ms.wav in Resources */ = {isa = PBXBuildFile; fileRef = D94A6B6D1D9AC3EA000C4F76 /* test_2k_8820_200ms.wav */; };
 		D94A6B7C1D9AC3EA000C4F76 /* 音频使用说明.txt in Resources */ = {isa = PBXBuildFile; fileRef = D94A6B6E1D9AC3EA000C4F76 /* 音频使用说明.txt */; };
 		D94A6B821D9AC752000C4F76 /* jiema.c in Sources */ = {isa = PBXBuildFile; fileRef = D94A6B801D9AC752000C4F76 /* jiema.c */; };
+		D96E570B1DC188DA00B7586E /* KEVolumeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = D96E570A1DC188DA00B7586E /* KEVolumeUtil.m */; };
 		D98EDA811D9D36B000501111 /* rsine500hz.wav in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA801D9D36B000501111 /* rsine500hz.wav */; };
 		D98EDA891D9D3B7B00501111 /* charge1.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA821D9D3B7B00501111 /* charge1.png */; };
 		D98EDA8A1D9D3B7B00501111 /* charge5.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA831D9D3B7B00501111 /* charge5.png */; };
@@ -126,6 +127,8 @@
 		D94A6B6E1D9AC3EA000C4F76 /* 音频使用说明.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "音频使用说明.txt"; sourceTree = "<group>"; };
 		D94A6B801D9AC752000C4F76 /* jiema.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jiema.c; sourceTree = "<group>"; };
 		D94A6B811D9AC752000C4F76 /* jiema.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jiema.h; sourceTree = "<group>"; };
+		D96E57091DC188DA00B7586E /* KEVolumeUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KEVolumeUtil.h; sourceTree = "<group>"; };
+		D96E570A1DC188DA00B7586E /* KEVolumeUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KEVolumeUtil.m; sourceTree = "<group>"; };
 		D98EDA801D9D36B000501111 /* rsine500hz.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = rsine500hz.wav; sourceTree = "<group>"; };
 		D98EDA821D9D3B7B00501111 /* charge1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = charge1.png; sourceTree = "<group>"; };
 		D98EDA831D9D3B7B00501111 /* charge5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = charge5.png; sourceTree = "<group>"; };
@@ -210,6 +213,8 @@
 				D94A6B5D1D9AC3BB000C4F76 /* Recorder.m */,
 				D99B9D561DB3A9A300A587F1 /* UIDevice+DeviceModel.h */,
 				D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */,
+				D96E57091DC188DA00B7586E /* KEVolumeUtil.h */,
+				D96E570A1DC188DA00B7586E /* KEVolumeUtil.m */,
 				D94A6B0E1D9A95C8000C4F76 /* Assets.xcassets */,
 				D94A6B101D9A95C8000C4F76 /* LaunchScreen.storyboard */,
 				D94A6B131D9A95C8000C4F76 /* Info.plist */,
@@ -476,6 +481,7 @@
 				D94A6B041D9A95C8000C4F76 /* main.m in Sources */,
 				D94A6B501D9AA135000C4F76 /* HomeViewController.m in Sources */,
 				D94A6B821D9AC752000C4F76 /* jiema.c in Sources */,
+				D96E570B1DC188DA00B7586E /* KEVolumeUtil.m in Sources */,
 				D94A6B5E1D9AC3BB000C4F76 /* Recorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
