@@ -55,6 +55,7 @@
 		D98EDA8E1D9D3B7B00501111 /* charge9.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA871D9D3B7B00501111 /* charge9.png */; };
 		D98EDA8F1D9D3B7B00501111 /* charge10.png in Resources */ = {isa = PBXBuildFile; fileRef = D98EDA881D9D3B7B00501111 /* charge10.png */; };
 		D99B9D581DB3A9A300A587F1 /* UIDevice+DeviceModel.m in Sources */ = {isa = PBXBuildFile; fileRef = D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */; };
+		D9A9997C1DC88C27005B63C2 /* playAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = D9A9997B1DC88C27005B63C2 /* playAudio.m */; };
 		D9BA907C1DBB102A0060238C /* beep5ms.wav in Resources */ = {isa = PBXBuildFile; fileRef = D9BA907B1DBB102A0060238C /* beep5ms.wav */; };
 		D9BA90811DBB1BCC0060238C /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9BA90801DBB1BCC0060238C /* MediaPlayer.framework */; };
 /* End PBXBuildFile section */
@@ -139,6 +140,8 @@
 		D98EDA881D9D3B7B00501111 /* charge10.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = charge10.png; sourceTree = "<group>"; };
 		D99B9D561DB3A9A300A587F1 /* UIDevice+DeviceModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIDevice+DeviceModel.h"; sourceTree = "<group>"; };
 		D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+DeviceModel.m"; sourceTree = "<group>"; };
+		D9A9997A1DC88C27005B63C2 /* playAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = playAudio.h; sourceTree = "<group>"; };
+		D9A9997B1DC88C27005B63C2 /* playAudio.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = playAudio.m; sourceTree = "<group>"; };
 		D9BA907B1DBB102A0060238C /* beep5ms.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = beep5ms.wav; sourceTree = "<group>"; };
 		D9BA90801DBB1BCC0060238C /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -215,6 +218,8 @@
 				D99B9D571DB3A9A300A587F1 /* UIDevice+DeviceModel.m */,
 				D96E57091DC188DA00B7586E /* KEVolumeUtil.h */,
 				D96E570A1DC188DA00B7586E /* KEVolumeUtil.m */,
+				D9A9997A1DC88C27005B63C2 /* playAudio.h */,
+				D9A9997B1DC88C27005B63C2 /* playAudio.m */,
 				D94A6B0E1D9A95C8000C4F76 /* Assets.xcassets */,
 				D94A6B101D9A95C8000C4F76 /* LaunchScreen.storyboard */,
 				D94A6B131D9A95C8000C4F76 /* Info.plist */,
@@ -375,6 +380,11 @@
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 44J4M7A3TP;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					D94A6B171D9A95C8000C4F76 = {
 						CreatedOnToolsVersion = 8.0;
@@ -480,6 +490,7 @@
 				D99B9D581DB3A9A300A587F1 /* UIDevice+DeviceModel.m in Sources */,
 				D94A6B041D9A95C8000C4F76 /* main.m in Sources */,
 				D94A6B501D9AA135000C4F76 /* HomeViewController.m in Sources */,
+				D9A9997C1DC88C27005B63C2 /* playAudio.m in Sources */,
 				D94A6B821D9AC752000C4F76 /* jiema.c in Sources */,
 				D96E570B1DC188DA00B7586E /* KEVolumeUtil.m in Sources */,
 				D94A6B5E1D9AC3BB000C4F76 /* Recorder.m in Sources */,

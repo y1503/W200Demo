@@ -52,7 +52,7 @@ static void AQInputCallback (void * __nullable       inUserData,
         aqc.mDataFormat.mBytesPerPacket = aqc.mDataFormat.mBytesPerFrame * aqc.mDataFormat.mFramesPerPacket;
         
         SInt32 status = AudioQueueNewInput(&aqc.mDataFormat, AQInputCallback, (__bridge void * _Nullable)(self), NULL, kCFRunLoopCommonModes, 0, &aqc.queue);
-        NSLog(@"status = %d", status);
+        NSLog(@"status = %d", (int)status);
         
         //        aqc.recPtr = 0;
         aqc.run = 1;
@@ -79,9 +79,7 @@ static void AQInputCallback (void * __nullable       inUserData,
 - (void) dealloc
 {
     AudioQueueStop(aqc.queue, true);
-    
     aqc.run = 0;
-    
     AudioQueueDispose(aqc.queue, true);
     
 }
@@ -94,6 +92,7 @@ static void AQInputCallback (void * __nullable       inUserData,
 - (void) stop
 {
     AudioQueueStop(aqc.queue, true);
+    AudioQueueReset(aqc.queue);
 }
 
 
@@ -107,7 +106,7 @@ static void AQInputCallback (void * __nullable       inUserData,
 {
     long size = buffer->mAudioDataByteSize;
     
-    t_sample * data = (t_sample *) buffer->mAudioData;
+    t_sample *data = (t_sample *) buffer->mAudioData;
     
     unsigned char retBuf[128];
     
@@ -121,11 +120,6 @@ static void AQInputCallback (void * __nullable       inUserData,
         
     }
     
-    
-    //    [self.outFile writeData:codeData];
-    
-    
-//    [codeData release];
 }
 //“起始”			帧头。0x40
 //“帧长度”	该长度从“收发类型”字段开始（含“收发类型”字段），至“数据”字段结束（含“数据”字段）。

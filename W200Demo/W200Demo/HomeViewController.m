@@ -13,6 +13,7 @@
 #import "UIDevice+DeviceModel.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "KEVolumeUtil.h"
+#import "playAudio.h"
 
 @interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate, UIAlertViewDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
@@ -30,6 +31,7 @@
 @property (nonatomic, strong) NSString *deviceStr;//记录当前手机的型号
 @property (nonatomic, strong) NSOperationQueue *queue;
 @property (nonatomic, assign) float volume;//保存当前的音量
+//@property (nonatomic, strong) playAudio *player;
 @end
 
 @implementation HomeViewController
@@ -73,6 +75,20 @@
     
     //进来先检测一次
     [self checkHeadset];
+}
+
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+        if (granted) {
+            NSLog(@"获取到mic访问权限");
+        } else {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"请开启允许【W200】访问您的麦克风" delegate:self cancelButtonTitle:@"忽略" otherButtonTitles:@"去开启", nil];
+            [alert show];
+        }
+    }];
 }
 
 - (void)setVolumeValue
@@ -119,33 +135,9 @@
         self.messageLbl.text = @"请重新匹配W200设备";
     }else if ([self.messageLbl.text isEqualToString:@"匹配W200设备..."]){
         [self.checkBagePlayer play];
+//        [self playCheckBage];
     }
     timer.fireDate = [NSDate distantFuture];
-}
-
-- (void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-    [[AVAudioSession sharedInstance] setActive:YES error:nil];
-    
-    [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-        if (granted) {
-            NSLog(@"获取到mic访问权限");
-        } else {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"请开启允许【W200】访问您的麦克风" delegate:self cancelButtonTitle:@"忽略" otherButtonTitles:@"去开启", nil];
-            [alert show];
-        } 
-    }];
-    
-    
-    [self.mRecorder start];
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-    [super viewWillDisappear:animated];
-    [self.mRecorder stop];
-    [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -191,6 +183,7 @@
     
     //开启后检测一次
     [self.checkBagePlayer play];
+//    [self playCheckBage];
 }
 
 
@@ -273,7 +266,8 @@
             
             //[[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
             [self.scanPlayer play];
-            }
+//            [self playScan];
+        }
             break;
             
         default:
@@ -289,6 +283,7 @@
         if ([self isHeadsetPluggedIn]) {
             //检测到设备插入检测一次
             [self.checkBagePlayer play];
+//            [self playCheckBage];
             self.messageLbl.text = @"匹配W200设备...";
             self.timer.fireDate = [NSDate dateWithTimeIntervalSinceNow:1];
             
@@ -430,6 +425,21 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
 {
     
 }
+
+//#pragma mark -- 播放触发出光的音频
+//- (void)playScan
+//{
+//    NSString *soundPath = [[NSBundle mainBundle] pathForResource:@"rsine4khz.wav" ofType:nil];
+//    self.player = [[playAudio alloc] initWithAudio:soundPath];
+//}
+//
+//#pragma mark -- 播放触发出光的音频
+//- (void)playCheckBage
+//{
+//    NSString *soundPath = [[NSBundle mainBundle] pathForResource:@"rsine500hz.wav" ofType:nil];
+//    self.player = [[playAudio alloc] initWithAudio:soundPath];
+//}
+
 
 - (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
 {
