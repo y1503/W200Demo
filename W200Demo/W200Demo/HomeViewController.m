@@ -75,8 +75,31 @@
     
     //进来先检测一次
     [self checkHeadset];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enterForegroundOrBackground:) name:@"ForegroundOrBackground" object:nil];
 }
 
+- (void)enterForegroundOrBackground:(NSNotification *)notification
+{
+    switch ([notification.object intValue]) {
+        case 0://进入后台
+        {
+            [self.mRecorder stop];
+            if ([self.deviceStr isEqualToString:Device_iPhone4] || [self.deviceStr isEqualToString:Device_iPhone4S]) {
+                [self setVolumeValue];
+            }
+        }
+            break;
+        case 1://进入前台
+        {
+            [self.mRecorder start];
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
 
 - (void)viewWillAppear:(BOOL)animated
 {
@@ -113,7 +136,12 @@
     
     
     NSLog(@"系统当前音量：%f", systemVolume);
-    [volumeViewSlider setValue:1.0 animated:YES];
+    if ([self.deviceStr isEqualToString:Device_iPhone4] || [self.deviceStr isEqualToString:Device_iPhone4S]) {
+        [volumeViewSlider setValue:0.5 animated:YES];
+    }else{
+        [volumeViewSlider setValue:1.0 animated:YES];
+    }
+    
     
     // send UI control event to make the change effect right now.
 //    [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];

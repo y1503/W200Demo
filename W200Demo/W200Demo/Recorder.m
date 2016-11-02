@@ -92,7 +92,6 @@ static void AQInputCallback (void * __nullable       inUserData,
 - (void) stop
 {
     AudioQueueStop(aqc.queue, true);
-    AudioQueueReset(aqc.queue);
 }
 
 
