@@ -51,8 +51,7 @@
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
     
-    self.mRecorder = [[Recorder alloc] init];
-    self.mRecorder.delegate = self;
+    
     [self.mRecorder start];
 
     self.deviceStr = [[UIDevice currentDevice] deviceModel];
@@ -84,10 +83,7 @@
     switch ([notification.object intValue]) {
         case 0://进入后台
         {
-            [self.mRecorder stop];
-            if ([self.deviceStr isEqualToString:Device_iPhone4] || [self.deviceStr isEqualToString:Device_iPhone4S]) {
-                [self setVolumeValue];
-            }
+            [self.mRecorder pause];
         }
             break;
         case 1://进入前台
@@ -128,19 +124,15 @@
     }
 
     // retrieve system volume
-    float systemVolume = volumeViewSlider.value;
-    if (systemVolume < 0.5) {
+//    float systemVolume = volumeViewSlider.value;
+//    if (systemVolume < 1.0) {
 //        MPMusicPlayerController *mp = [MPMusicPlayerController applicationMusicPlayer];
 //        mp.volume = 1.0;//0为最小1为最大
-    }
+//    }
     
+//    NSLog(@"系统当前音量：%f", systemVolume);
     
-    NSLog(@"系统当前音量：%f", systemVolume);
-    if ([self.deviceStr isEqualToString:Device_iPhone4] || [self.deviceStr isEqualToString:Device_iPhone4S]) {
-        [volumeViewSlider setValue:0.5 animated:YES];
-    }else{
-        [volumeViewSlider setValue:1.0 animated:YES];
-    }
+    [volumeViewSlider setValue:1.0 animated:YES];
     
     
     // send UI control event to make the change effect right now.
@@ -163,7 +155,6 @@
         self.messageLbl.text = @"请重新匹配W200设备";
     }else if ([self.messageLbl.text isEqualToString:@"匹配W200设备..."]){
         [self.checkBagePlayer play];
-//        [self playCheckBage];
     }
     timer.fireDate = [NSDate distantFuture];
 }
@@ -312,13 +303,16 @@
             //检测到设备插入检测一次
             [self.checkBagePlayer play];
 //            [self playCheckBage];
-            self.messageLbl.text = @"匹配W200设备...";
-            self.timer.fireDate = [NSDate dateWithTimeIntervalSinceNow:1];
+            if (self.bageValue == -1) {
+                self.messageLbl.text = @"匹配W200设备...";
+                self.timer.fireDate = [NSDate dateWithTimeIntervalSinceNow:5];
+            }
             
         }else{
             NSLog(@"耳机拔出");
             self.messageLbl.text = @"未插入W200";
             [self.batteryBtn setImage:[UIImage imageNamed:@"charge0"] forState:UIControlStateNormal];
+            self.bageValue = -1;
         }
         
         self.scanBtn.selected = NO;
@@ -406,6 +400,16 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     AudioServicesPlaySystemSoundWithVibration(4095,nil, dict);
     
     [self.mRecorder performSelector:@selector(start) withObject:nil afterDelay:ms/1000.0f];
+}
+
+#pragma mark -- 懒加载录音对象
+- (Recorder *)mRecorder
+{
+    if (_mRecorder == nil) {
+        _mRecorder = [[Recorder alloc] init];
+        _mRecorder.delegate = self;
+    }
+    return _mRecorder;
 }
 
 #pragma mark -- 懒加载扫描播放器
