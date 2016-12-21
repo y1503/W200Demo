@@ -13,7 +13,53 @@
 #import "UIDevice+DeviceModel.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "KEVolumeUtil.h"
-#import "playAudio.h"
+#import "Player.h"
+#import "wavemake.h"
+
+
+void printByteArr(Byte *bytes ,int lenth)
+{
+    for (int i = 0; i < lenth; i++) {
+        NSLog(@"0x%02X", bytes[i]);
+    }
+}
+
+int WriteComm(Byte bytes[],int length){
+    int wavelen =0;
+    Byte wavedata[48000*2];
+    //Log.d("转换元数据","转换元数据start");
+    int count = wavemake(bytes,length,wavedata,wavelen);
+    //获取到wav数据后就可以播放出去了
+    if (count > 0) {
+        
+        NSString *filePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        filePath = [filePath stringByAppendingPathComponent:@"image.wav"];
+        
+        NSData *data = [NSData dataWithBytes:wavedata length:count];
+        [data writeToFile:filePath atomically:YES];
+        
+//        NSFileManager *fileManager = [NSFileManager defaultManager];
+//        if ([fileManager fileExistsAtPath:filePath]) {
+//            [fileManager removeItemAtPath:filePath error:nil];
+//        }
+        
+    }
+    
+    return 0;
+}
+
+
+
+
+//“起始”			帧头。0x40
+//“帧长度”	该长度从“收发类型”字段开始（含“收发类型”字段），至“数据”字段结束（含“数据”字段）。
+//“收发类型”	   指是收到的数据是返回确认信息还是新的数据信息（’R’表示收到确认信息，’S’表示收到是新的数据，需要处理。）
+//“指令类型”	为指令编码，方便通信相互通讯的一一对应
+//“数据”	最小1个字节，最大253个字节的任意数据。
+//“校验”		“帧长度”开始“数据”为止所有的全字节的总和的低8位
+//“终止”			非固定长度标准协议的“终止”字段固定为1个字节：0x2A。
+
+
 
 @interface HomeViewController ()<UITableViewDelegate,UITableViewDataSource, UIGestureRecognizerDelegate,AVAudioPlayerDelegate,RecorderDelegate, UIAlertViewDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *billCodeTF;
@@ -23,6 +69,7 @@
 @property (nonatomic, strong) UIButton *batteryBtn;//电池
 @property (nonatomic, strong) AVAudioPlayer *scanPlayer;//扫描条码用
 @property (nonatomic, strong) AVAudioPlayer *checkBagePlayer;//检测电量用
+@property (nonatomic, strong) AVAudioPlayer *pcmWavPlayer;//播放转成pcm的wav数据
 @property (nonatomic, strong) Recorder *mRecorder;
 @property (nonatomic, strong) UIButton *scanBtn;//扫描按钮
 @property (nonatomic, strong) NSMutableArray *billArr;
@@ -31,7 +78,7 @@
 @property (nonatomic, strong) NSString *deviceStr;//记录当前手机的型号
 @property (nonatomic, strong) NSOperationQueue *queue;
 @property (nonatomic, assign) float volume;//保存当前的音量
-//@property (nonatomic, strong) playAudio *player;
+@property (nonatomic, strong) Player *player;
 @end
 
 @implementation HomeViewController
@@ -42,6 +89,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    NSQueue *queue = [[NSQueue alloc] init];
+    
+    self.player = [[Player alloc] init];
+    self.player.voiceDataQueue = queue;
+    [self.player startQueue];
+    
+    
     self.bageValue = -1;
     
     //耳机插入和拔出的通知
@@ -50,7 +104,6 @@
 
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
-    
     
     [self.mRecorder start];
 
@@ -270,7 +323,7 @@
             break;
         case 103://检测电量
         {
-            
+            [self checkVersion];
         }
             break;
         case 201://清空
@@ -473,10 +526,10 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
 //}
 
 
-- (void)sendFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
+- (void)sendFromRecorder:(Recorder *)recorder type:(COMM_CMD_TYPE)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
 {
     switch (type) {
-        case Operation_Type_Code://条码
+        case COMM_CMD_TYPE_Code://条码
         {
             self.scanBtn.selected = NO;
             [self playWordSound:@"beep5ms.wav"];
@@ -490,7 +543,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
             });
         }
             break;
-        case Operation_Type_Battery://电量
+        case COMM_CMD_TYPE_Battery://电量
         {
             int value = *byteData / 10;
             NSLog(@"电量：%d", value);
@@ -510,10 +563,10 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     
 }
 
-- (void)receiveFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
+- (void)receiveFromRecorder:(Recorder *)recorder type:(COMM_CMD_TYPE)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
 {
     switch (type) {
-        case Operation_Type_Code://条码
+        case COMM_CMD_TYPE_Code://条码
         {
             [self playWordSound:@"beep5ms.wav"];
             NSString *codeStr = [[NSString alloc] initWithBytes:byteData length:dataLenth-1 encoding:NSUTF8StringEncoding];
@@ -528,7 +581,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
             
         }
             break;
-        case Operation_Type_Battery://电量
+        case COMM_CMD_TYPE_Battery://电量
         {
             int value = *byteData / 10;
             NSLog(@"电量：%d", value);
@@ -596,6 +649,88 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+}
+
+#pragma mark -- 懒加载电量检测播放器
+- (AVAudioPlayer *)pcmWavPlayer
+{
+    if (_pcmWavPlayer == nil) {
+        NSString *filePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        NSString *soundPath = [filePath stringByAppendingPathComponent:@"image.wav"];
+        NSURL *url = [NSURL fileURLWithPath:soundPath];
+        NSError *err = nil;
+        _pcmWavPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&err];
+        _pcmWavPlayer.volume = 1.0;
+        _pcmWavPlayer.delegate = self;
+        [_pcmWavPlayer prepareToPlay];
+        if (err != nil) {
+            NSLog(@"player init error:%@",err);
+            _pcmWavPlayer = nil;
+        }
+    }
+    
+    return _pcmWavPlayer;
+}
+
+#pragma mark -- 检测版本信息
+- (void)checkVersion
+{
+    Byte data[] = {0x00,0x00};
+    
+    [self comm_send:COMM_TRANS_TYPE_SEND cmd:COMM_CMD_TYPE_VERSION pData:data len:2];
+        
+//    [self.pcmWavPlayer play];
+    
+//    NSString *tmpDir = NSTemporaryDirectory();
+}
+
+/*-------------------------------------------------------------------------
+ * 函数: comm_send
+ * 说明: 发送
+ * 参数: pData---数据buffer
+ len-----条码长度
+ * 返回: HY_OK------发送成功
+ HY_ERROR---发送失败
+ -------------------------------------------------------------------------*/
+- (void)comm_send:(COMM_TRANS_TYPE)transType cmd:(COMM_CMD_TYPE)cmd pData:(Byte[])pData len:(int)len
+{
+    printByteArr(pData, len);
+    
+    Byte i;
+    Byte temp[len + 6];
+    int sum=0;
+    
+    if (pData == NULL) return;
+    
+    temp[0] = COMM_PAKET_START_BYTE;
+    temp[1] = (Byte)(len+2);
+    temp[2] = (Byte)transType;
+    temp[3] = (Byte)cmd;
+    //拷贝pData到temp中
+    memcpy(temp+4, pData, len);
+    temp[len+5] = COMM_PAKET_END_BYTE;
+    //计算校验位
+    for(i = 1; i < len + 3; i++)
+    {
+        sum += temp[i];
+    }
+    //把校验数据写进入
+    //    temp[len+4] = (Byte)sum;
+    temp[len+4] = sum&0xff;
+    printByteArr(temp, len+6);
+    //    Byte temp1[len+7];
+    //    temp1[0] = 0x11;
+    //    memcpy(temp1, temp, len+6);
+//    WriteComm(temp, len+6);
+    
+    signed short pcmData[48000*2];
+    
+    int size = data2Pcm(temp, len + 6, pcmData);
+    NSData *codeData = [[NSData alloc] initWithBytes:pcmData length:size];
+    if (size) {
+        [self.player.voiceDataQueue enqueue:codeData];
+    }
+    
 }
 
 @end

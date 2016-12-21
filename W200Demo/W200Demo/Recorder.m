@@ -142,9 +142,9 @@ static void AQInputCallback (void * __nullable       inUserData,
     
     int i = 0;
     while (i < length) {
-        if (dataBuf[i] == 0x40 && ++i < length) {//包的头，当前指向帧长度位
+        if (dataBuf[i] == COMM_PAKET_START_BYTE && ++i < length) {//包的头，当前指向帧长度位
             int frameLength = dataBuf[i];//帧长度
-            if (i + frameLength + 2 < length && dataBuf[i + frameLength + 2] == 0x2A) {//判断剩下的长度是否够一个完整的包
+            if (i + frameLength + 2 < length && dataBuf[i + frameLength + 2] == COMM_PAKET_END_BYTE) {//判断剩下的长度是否够一个完整的包
                 //检验校验位是否正确
                 int total = 0;
                 for (int j = 0; j < frameLength + 1; j++) {
@@ -156,18 +156,18 @@ static void AQInputCallback (void * __nullable       inUserData,
                 
                 if (a == b) {//校验通过
                     char flag = dataBuf[i+1];//获取收发类型
-                    Operation_Type type = dataBuf[i+2];
+                    COMM_CMD_TYPE type = dataBuf[i+2];
                     unsigned char *byteData = dataBuf+i+2+1;
                     int dataLength = frameLength-2;
                     switch (flag) {
-                        case 'R'://收到确认信息
+                        case COMM_TRANS_TYPE_RESP://收到确认信息
                         {
                             if ([self.delegate respondsToSelector:@selector(receiveFromRecorder:type:byteData:dataLenth:)]) {
                                 [self.delegate receiveFromRecorder:self type:type byteData:byteData dataLenth:dataLength];
                             }
                         }
                             break;
-                        case 'S'://收到是新的数据
+                        case COMM_TRANS_TYPE_SEND://收到是新的数据
                         {
                             if ([self.delegate respondsToSelector:@selector(sendFromRecorder:type:byteData:dataLenth:)]) {
                                 [self.delegate sendFromRecorder:self type:type byteData:byteData dataLenth:dataLength];
