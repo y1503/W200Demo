@@ -38,11 +38,6 @@ int WriteComm(Byte bytes[],int length){
         NSData *data = [NSData dataWithBytes:wavedata length:count];
         [data writeToFile:filePath atomically:YES];
         
-//        NSFileManager *fileManager = [NSFileManager defaultManager];
-//        if ([fileManager fileExistsAtPath:filePath]) {
-//            [fileManager removeItemAtPath:filePath error:nil];
-//        }
-        
     }
     
     return 0;
@@ -89,11 +84,11 @@ int WriteComm(Byte bytes[],int length){
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    NSQueue *queue = [[NSQueue alloc] init];
-    
-    self.player = [[Player alloc] init];
-    self.player.voiceDataQueue = queue;
-    [self.player startQueue];
+//    NSQueue *queue = [[NSQueue alloc] init];
+//    
+//    self.player = [[Player alloc] init];
+//    self.player.voiceDataQueue = queue;
+//    [self.player startQueue];
     
     
     self.bageValue = -1;
@@ -679,7 +674,7 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     
     [self comm_send:COMM_TRANS_TYPE_SEND cmd:COMM_CMD_TYPE_VERSION pData:data len:2];
         
-//    [self.pcmWavPlayer play];
+    [self.pcmWavPlayer play];
     
 //    NSString *tmpDir = NSTemporaryDirectory();
 }
@@ -694,8 +689,6 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
  -------------------------------------------------------------------------*/
 - (void)comm_send:(COMM_TRANS_TYPE)transType cmd:(COMM_CMD_TYPE)cmd pData:(Byte[])pData len:(int)len
 {
-    printByteArr(pData, len);
-    
     Byte i;
     Byte temp[len + 6];
     int sum=0;
@@ -717,18 +710,26 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     //把校验数据写进入
     //    temp[len+4] = (Byte)sum;
     temp[len+4] = sum&0xff;
-    printByteArr(temp, len+6);
-    //    Byte temp1[len+7];
-    //    temp1[0] = 0x11;
-    //    memcpy(temp1, temp, len+6);
-//    WriteComm(temp, len+6);
+    
+    Byte temp1[len+7];
+    temp1[0] = 0x11;
+    memcpy(temp1+1, temp, len+6);
+    WriteComm(temp1, len+7);
+    
+    printByteArr(temp1, len+7);
     
     signed short pcmData[48000*2];
     
-    int size = data2Pcm(temp, len + 6, pcmData);
+    int size = data2Pcm(temp1, len + 7, pcmData);
     NSData *codeData = [[NSData alloc] initWithBytes:pcmData length:size];
     if (size) {
         [self.player.voiceDataQueue enqueue:codeData];
+        
+        NSString *filePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        filePath = [filePath stringByAppendingPathComponent:@"image.pcm"];
+        //把pcm数据写入文件
+        [codeData writeToFile:filePath atomically:YES];
+        
     }
     
 }
