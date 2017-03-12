@@ -468,6 +468,8 @@ extern void AudioServicesPlaySystemSoundWithVibration(int, id, id);
     
 }
 
+
+#pragma mark -- 解码成功后的回调
 - (void)receiveFromRecorder:(Recorder *)recorder type:(Operation_Type)type byteData:(unsigned char *)byteData dataLenth:(unsigned char)dataLenth
 {
     switch (type) {
